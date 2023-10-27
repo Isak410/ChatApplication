@@ -2,8 +2,81 @@ h1 {
     color: green;
 }
 
+#logindiv {
+    background-size: contain;
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: solid gray 2px;
+    padding: 5px;
+    padding-bottom: 10px;
+    border-radius: 4px;
+}
+
+#logindiv button {
+    width: fit-content;
+    background-color: rgb(45, 189, 45);
+    color: white;
+    border-radius: 5px;
+    border: 0;
+    z-index: 5;
+}
+
 #container {
     display: flex;
     flex-direction: column;
     width: 200px;
+}
+
+#formDiv {
+    display: none;
+    position: relative;
+    width: 500px;
+    min-width: 500px;
+    border: solid;
+    border-radius: 3px;
+}
+
+h6 {
+    
+    margin: 0;
+    margin-top: 5px;
+    color: red;
+}
+
+#form {
+    width: 100%;
+}
+
+form input {
+    width: 430px;
+}
+form button {
+    width: 62px;
+}
+
+p {
+    padding: 2px;
+    padding-right: 4px;
+    margin: 3px;
+    border-radius: 3px;
+    background-color: rgb(134, 134, 134);
+    width: fit-content;
+    max-width: 275px;
+    word-wrap: break-word;
+}
+
+#messages {
+    height: 400px;
+    overflow: auto;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+}
+
+#brukerKnapp {
+    display: none;
 }

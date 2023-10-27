@@ -8,12 +8,23 @@
     <link rel="shortcut icon" href="Assets/download__1__removebg_preview_TQO_icon.ico" type="image/x-icon">
 </head>
 <body>
-    <div id="container">
-        <input type="text" id="input0" placeholder="brukernavn">
-        <input type="text" id="input1" placeholder="passord">
-        <button id="knapp">Submit</button>
-        <button id="brukerKnapp">afwb</button>
+    <div id="logindiv">
+        <input type="text" id="input0" placeholder="brukernavn"> <br>
+        <input type="text" id="input1" placeholder="passord"> <br>
+        <button id="knapp">Submit</button> 
+        <h6 id="loginField"></h6>
     </div>
+
+    <div id="formDiv">
+        <div id="messages">
+
+        </div>
+        <form id="form" action="">
+            <input id="m" autocomplete="off" /><button type="submit">Send</button>
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
 </html>
