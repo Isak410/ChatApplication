@@ -46,7 +46,7 @@ h1 {
 }
 
 #createnewtabmenu {
-    opacity: 0%;
+    display: none;
     pointer-events: none;
     position: absolute;
     width: 150px;
@@ -115,7 +115,7 @@ p {
     word-wrap: break-word;
 }
 
-#messages {
+.messages {
     height: 400px;
     overflow: auto;
 }

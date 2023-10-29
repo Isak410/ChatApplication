@@ -21,9 +21,9 @@ var users = {
 var totalRoomsCreated = 4
 var chatRooms = [
     {id:0,roomName:'heihei',users:['Isak','Adrian','Håkon']},
-    {id:1,roomName:'heihei',users:['Albert','Adrian','Håkon']},
-    {id:2,roomName:'heihei',users:['Isak','Adrian','Håkon']},
-    {id:3,roomName:'heihei',users:['Isak','Adrian','Håkon']}
+    {id:1,roomName:'rom2',users:['Albert','Adrian','Håkon']},
+    {id:2,roomName:'Gamers',users:['Isak','Adrian','Håkon']},
+    {id:3,roomName:'gompers',users:['Isak','Adrian','Håkon']}
 ]
 
 app.use(express.json())
@@ -107,14 +107,21 @@ io.on('connection', (socket) => {
 })
 
 app.post('/sendmessage', (req,res) => {
-    const { timeOfSend, message } = req.body
+    const { selectedRoom, timeOfSend, message } = req.body
     var sendTimeArr = [timeOfSend[0]+timeOfSend[1],timeOfSend[3]+timeOfSend[4]]
     var myObj = {
+        "room":selectedRoom,
         "senderuser":req.session.username,
         "timeOfSend":sendTimeArr,
         "message":message
     }
+    console.log(selectedRoom)
+    if (selectedRoom == 'global') {
     io.to('LoggedIn').emit('chatmessage', myObj)
+    }   else {
+        io.to('chatroom'+selectedRoom).emit('chatmessage', myObj)
+    }
+
     console.log(myObj)
 
     res.json("successfull")
@@ -133,6 +140,17 @@ app.post('/newchatroom', (req,res) => {
     chatRooms.push(myObj)
     console.log(chatRooms)
     io.to('LoggedIn').emit('newchatroom',chatRooms)
+})
+
+app.post('/checkroomnames', (req,res) => {
+    const { navn } = req.body
+    var bool = false
+    for (let i = 0; i < chatRooms.length; i++) {
+        if (chatRooms[i].roomName == navn) {
+            bool = true
+        }
+    }
+    res.json(bool)
 })
 
 app.get('/allchatrooms', (req,res) => {

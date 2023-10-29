@@ -1,5 +1,6 @@
 document.addEventListener('DOMContentLoaded',  () => {
 
+var selectedRoom = 'global'
 const knapp = document.getElementById('knapp')
 const inputBruker = document.getElementById('input0')
 const inputPassord = document.getElementById('input1')
@@ -7,7 +8,7 @@ const logindiv = document.getElementById('logindiv')
 const formdiv = document.getElementById('formDiv')
 const loginField = document.getElementById('loginField')
 const spesknapp = document.getElementById('spesknapp')
-const messageDiv = document.getElementById('messages')
+const messageDiv = document.querySelector('#chatglobal')
 var myUsername
 var socket = io();
 var form = document.getElementById('form');
@@ -39,7 +40,7 @@ form.addEventListener('submit', function (e) {
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({timeOfSend:currentTime,message:msgval}),
+        body: JSON.stringify({selectedRoom:selectedRoom,timeOfSend:currentTime,message:msgval}),
     })
     .then(res => res.json())
     .then(data => {
@@ -80,6 +81,7 @@ function activateIO() {
 var prevTime = [0,0]
 
 async function loadChatmessage(msg) {
+    var divToAppendTo = document.getElementById('chat'+msg.room)
     console.log(myUsername)
     console.log(prevTime)
       if (prevTime[0] != msg.timeOfSend[0] || prevTime[1] != msg.timeOfSend[1]){
@@ -91,7 +93,7 @@ async function loadChatmessage(msg) {
         timeStamp.textContent = (msg.timeOfSend[0]+":"+msg.timeOfSend[1])
         console.log("timeStamp generated - "+msg.timeOfSend)
         timeStampDiv.appendChild(timeStamp)
-        messageDiv.appendChild(timeStampDiv)
+        divToAppendTo.appendChild(timeStampDiv)
       }
       if (!msg.senderuser == myUsername) {playNotification()}
       var message1 = document.createElement('p');
@@ -109,11 +111,11 @@ async function loadChatmessage(msg) {
         message1.className = "myMessage"
         message1.textContent = (msg.message)
         myMessageDiv.appendChild(message1)
-        messageDiv.appendChild(myMessageDiv);
+        divToAppendTo.appendChild(myMessageDiv);
       } else {
-        messageDiv.appendChild(message1)
+        divToAppendTo.appendChild(message1)
       }
-      var scrollableDiv = document.getElementById('messages');
+      var scrollableDiv = document.querySelector('#chatglobal');
       scrollableDiv.scrollTop = scrollableDiv.scrollHeight;
 }
 
@@ -121,9 +123,15 @@ async function loadtabinfo() {
     var arr = await getAllUsernames()
     var myUser = await getMyUsername()
     console.log(arr)
-    document.getElementById('createnewtabmenu').style.opacity = "100%"
+    document.getElementById('createnewtabmenu').style.display = "block"
     document.getElementById('createnewtabmenu').style.pointerEvents = "all"
     var menudiv = document.getElementById('createnewtabmenu')
+    menudiv.textContent = ''
+    var tabinput = document.createElement('input')
+    tabinput.type = 'text'
+    tabinput.placeholder = 'room name'
+    tabinput.id = 'tabnavn'
+    menudiv.appendChild(tabinput)
     for (let i = 0; i < arr.length; i++) {
         if (arr[i] != myUser) {
         var div = document.createElement('div')
@@ -136,21 +144,38 @@ async function loadtabinfo() {
         div.appendChild(newInput)
         div.appendChild(tekst)
         menudiv.appendChild(div)
-    }
+        }
     }
     var newKnapp = document.createElement('button')
     newKnapp.id = "newTabKnapp"
     newKnapp.textContent = "submit"
     newKnapp.addEventListener('click', createNewTab)
+    var h6tag = document.createElement('h6')
+    h6tag.id = 'menuh6'
     menudiv.appendChild(newKnapp)
+    menudiv.appendChild(h6tag)
 }
 
 async function createNewTab() {
-    if (document.getElementById('tabnavn').value == ""){return}
-    if (document.getElementById('tabnavn').value.length > 15){
-        document.getElementById('createnewtabmenu').appendChild(document.createTextNode('name must contain under 15 chars'))
+    var val = document.getElementById('tabnavn').value
+    if (val == ""){return}
+    if (val.length > 15){
+        document.getElementById('menuh6').textContent = 'must contain under 16 chars'
         return;
     }
+    const response = await fetch('/checkroomnames', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({navn:val})
+    });
+    const data = await response.json();
+    if (data == true) {
+        document.getElementById('menuh6').textContent = 'name taken'
+        return
+    }
+    document.getElementById('menuh6').textContent = ''
     var arr = await getAllUsernames()
     var myUser = await getMyUsername()
     var usersChecked = [myUser]
@@ -174,6 +199,14 @@ async function createNewTab() {
     .then(data => {
         console.log(data)
     })
+    resetTabMenu(arr)
+}
+
+function resetTabMenu(arr) {
+    document.getElementById('createnewtabmenu').style.display = "none"
+    for (let i = 0; i < arr.length; i++) {
+
+    }
 }
 
 socket.on('chatmessage', (msg) => {
@@ -199,14 +232,42 @@ async function abdvc(allchatrooms) {
             var newDiv = document.createElement('div')
             newDiv.className = 'tab'
             newDiv.appendChild(document.createTextNode(allchatrooms[arr1[i]].roomName))
+            newDiv.addEventListener("click", function(index) {
+                return function(){
+                    selectedRoom = allchatrooms[arr1[i]].id
+                    openTab(index)
+                    }
+                }(allchatrooms[arr1[i]].id))
+
             document.getElementById('tabcontainer').appendChild(newDiv)
     }
+    for (let i = 0; i < arr1.length;i++) {
+        var newMessageDiv = document.createElement('div')
+        newMessageDiv.className = 'messages'
+        newMessageDiv.id = ('chat'+allchatrooms[arr1[i]].id)
+        newMessageDiv.style.display = 'none'
+        document.getElementById('allmessagedivs').appendChild(newMessageDiv)
+        console.log(formdiv.children.length)
+
+
+    }
+
     var newClickabc = document.createElement('div')
     newClickabc.className = 'tab'
     newClickabc.id = 'clickabc'
     newClickabc.appendChild(document.createTextNode('+'))
     newClickabc.addEventListener('click', loadtabinfo)
     document.getElementById('tabcontainer').appendChild(newClickabc)
+}
+
+async function openTab(roomname) {
+    console.log(roomname)
+    var allmessagedivs = document.getElementsByClassName('messages')
+    for (let i = 0; i < allmessagedivs.length; i++){
+        allmessagedivs[i].style.display = "none"
+    }
+    document.getElementById('chat'+roomname).style.display = "block"
+    console.log("opened tab")
 }
 
 socket.on('newchatroom', (allchatrooms) => {
