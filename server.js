@@ -32,12 +32,25 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
+
+
 app.use(session({
     secret: 'secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge:sessionLength*1000 }
 }))
+
+app.post('/checkifusernametaken', (req,res) => {
+    const { username } = req.body
+    var bool = false
+    for (var key in users) {
+        if (person[key].username == username) {
+            bool = true
+        }
+    }
+    res.json(bool)
+})
 
 function cookieStillValid(cookie) {
     console.log(new Date())

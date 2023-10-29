@@ -45,6 +45,12 @@ h1 {
     text-wrap: nowrap;
 }
 
+#createProfile {
+    position: absolute;
+    align-items: center;
+    display: none;
+}
+
 #createnewtabmenu {
     display: none;
     pointer-events: none;

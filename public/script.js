@@ -8,7 +8,9 @@ const logindiv = document.getElementById('logindiv')
 const formdiv = document.getElementById('formDiv')
 const loginField = document.getElementById('loginField')
 const spesknapp = document.getElementById('spesknapp')
-const messageDiv = document.querySelector('#chatglobal')
+const showcreateProfile = document.getElementById('showcreateProfile')
+const createprofileDiv = document.getElementById('createProfile')
+const createuserButton = document.getElementById('createuserButton')
 var myUsername
 var socket = io();
 var form = document.getElementById('form');
@@ -302,7 +304,28 @@ async function getAllUsernames() {
     return data;
 }
 
+function showcreateprofileFunc() {
+    logindiv.style.display = 'none'
+    createprofileDiv.style.display = 'block'
+}
+
+async function createprofile() {
+    if (document.getElementById('createuserUsername').value == "") {return}
+    if (document.getElementById('createuserPassword').value == "") {return}
+    var usernametaken = await fetch('/checkifusernametaken', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username:document.getElementById('createuserUsername').value }),
+    })
+    if (usernametaken == true) {return}
+    
+}
+
 checkIfSessionActive()
 spesknapp.addEventListener('click', getAllUsernames)
 knapp.addEventListener('click', login)
+showcreateProfile.addEventListener('click',showcreateprofileFunc)
+createuserButton.addEventListener('click', createprofile)
 })
