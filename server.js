@@ -9,11 +9,22 @@ const { Server } = require('socket.io');
 const io = new Server(server);
 
 var users = {
-    'id1':{username:'Isak', password:'Isak123'},
-    'id2':{username:'Adrian', password:'Adrian123'}
+    'user1':{username:'Isak', password:'Isak123'},
+    'user2':{username:'Adrian', password:'Adrian123'},
+    'user3':{username:'Albert', password:'Albert123'},
+    'user4':{username:'Håkon', password:'Håkon123'},
+    'user5':{username:'Thomas', password:'Thomas123'},
+    'user6':{username:'Gabriel', password:'Gabriel123'},
+    'user7':{username:'Terje', password:'Terje123'},
 }
 
-
+var totalRoomsCreated = 4
+var chatRooms = [
+    {id:0,roomName:'heihei',users:['Isak','Adrian','Håkon']},
+    {id:1,roomName:'heihei',users:['Albert','Adrian','Håkon']},
+    {id:2,roomName:'heihei',users:['Isak','Adrian','Håkon']},
+    {id:3,roomName:'heihei',users:['Isak','Adrian','Håkon']}
+]
 
 app.use(express.json())
 
@@ -46,11 +57,19 @@ app.get('/sendUsername', (req,res) => {
     res.json(req.session.username);
 })
 
+app.get('/allUsernames', (req,res) => {
+    const userList = Object.values(users);
+    var arr = []
+    for (let i = 0; i < Object.values(users).length; i++) {
+        arr[i] = userList[i].username
+    }
+    res.json(arr)
+})
+
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
     const userList = Object.values(users);
     const user = userList.find(u => u.username === username && u.password === password);
-    console.log(user)
     if (user) {
         req.session.username = username;
         res.json({success:true});
@@ -68,11 +87,59 @@ app.get('/checkSession', (req,res) => {
     }   else {res.json(false)}             
 })
 
-
-
 io.on('connection', (socket) => {
     console.log('a user connected');
+    socket.on('userlogin', () => {
+        socket.join('LoggedIn')
+        io.to('LoggedIn').emit('message', 'heiheiehiheiehije')
+    })
+    socket.on('joinchatrooms', (roomids) => {
+        console.log(roomids)
+        for(let i = 0; i < roomids.length; i++){
+            socket.join('chatroom'+roomids[i])
+        }
+        console.log(socket.rooms)
+
+    })
+    socket.on('chat message', (data) => {
+        console.log(data)
+    })
 })
+
+app.post('/sendmessage', (req,res) => {
+    const { timeOfSend, message } = req.body
+    var sendTimeArr = [timeOfSend[0]+timeOfSend[1],timeOfSend[3]+timeOfSend[4]]
+    var myObj = {
+        "senderuser":req.session.username,
+        "timeOfSend":sendTimeArr,
+        "message":message
+    }
+    io.to('LoggedIn').emit('chatmessage', myObj)
+    console.log(myObj)
+
+    res.json("successfull")
+})
+
+app.post('/newchatroom', (req,res) => {
+    const { usersChecked, roomName } = req.body
+    console.log(usersChecked)
+    console.log(roomName)
+    totalRoomsCreated++
+    var myObj = {
+        id:totalRoomsCreated,
+        roomName:roomName,
+        users:usersChecked
+    }
+    chatRooms.push(myObj)
+    console.log(chatRooms)
+    io.to('LoggedIn').emit('newchatroom',chatRooms)
+})
+
+app.get('/allchatrooms', (req,res) => {
+    res.json(chatRooms)
+}) 
+
+
 
 app.use(express.static('public'));
 

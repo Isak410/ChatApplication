@@ -16,14 +16,24 @@
     </div>
 
     <div id="formDiv">
+        <div id="tabcontainer">
+            <div class="tab" onclick="openTab('tab1')">Tab 1</div>
+            <div class="tab" onclick="openTab('tab2')">Tab 2</div>
+            <div class="tab" onclick="openTab('tab2')">Tab 2</div>
+
+        </div>
         <div id="messages">
 
         </div>
         <form id="form" action="">
             <input id="m" autocomplete="off" /><button type="submit">Send</button>
         </form>
+        <div id="createnewtabmenu">
+            <input type="text" id="tabnavn" placeholder="navn">
+        </div>
     </div>
 
+    <button id="spesknapp">awfa</button>
     <script src="/socket.io/socket.io.js"></script>
     <script src="script.js"></script>
 </body>
