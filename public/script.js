@@ -7,10 +7,10 @@ const inputPassord = document.getElementById('input1')
 const logindiv = document.getElementById('logindiv')
 const formdiv = document.getElementById('formDiv')
 const loginField = document.getElementById('loginField')
-const spesknapp = document.getElementById('spesknapp')
 const showcreateProfile = document.getElementById('showcreateProfile')
 const createprofileDiv = document.getElementById('createProfile')
 const createuserButton = document.getElementById('createuserButton')
+const createprofileh6 = document.getElementById('createProfileh6')
 var myUsername
 var socket = io();
 var form = document.getElementById('form');
@@ -117,7 +117,7 @@ async function loadChatmessage(msg) {
       } else {
         divToAppendTo.appendChild(message1)
       }
-      var scrollableDiv = document.querySelector('#chatglobal');
+      var scrollableDiv = document.querySelector('#chat'+msg.room);
       scrollableDiv.scrollTop = scrollableDiv.scrollHeight;
 }
 
@@ -230,6 +230,18 @@ async function abdvc(allchatrooms) {
         }
     }
     socket.emit('joinchatrooms', roomsToJoin)
+    var globalchatdiv = document.createElement('div')
+    globalchatdiv.className = 'tab'
+    globalchatdiv.appendChild(document.createTextNode("Global"))
+    var allmessagedivs = document.getElementsByClassName('messages')
+    globalchatdiv.addEventListener('click', function() {
+        for (let i = 0; i < allmessagedivs.length; i++){
+            allmessagedivs[i].style.display = "none"
+        }   
+        document.querySelector('#chatglobal').style.display = 'block'
+        
+    })
+    document.getElementById('tabcontainer').appendChild(globalchatdiv)
     for (let i = 0; i < arr1.length; i++) {
             var newDiv = document.createElement('div')
             newDiv.className = 'tab'
@@ -310,21 +322,48 @@ function showcreateprofileFunc() {
 }
 
 async function createprofile() {
-    if (document.getElementById('createuserUsername').value == "") {return}
-    if (document.getElementById('createuserPassword').value == "") {return}
-    var usernametaken = await fetch('/checkifusernametaken', {
+    if (document.getElementById('createuserUsername').value == "" || document.getElementById('createuserPassword').value == "") {
+        createprofileh6.textContent = "All fields not filled"
+        return;
+    }
+    fetch('/checkifusernametaken', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username:document.getElementById('createuserUsername').value }),
     })
-    if (usernametaken == true) {return}
+    .then(res => res.json())
+    .then(data => {
+        console.log(data.usernametaken)
+        if (data.usernametaken == true) {createprofileh6.textContent = "username taken";return}
+        createprofileh6.textContent = ""
+        fetch('/createUser', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                username:document.getElementById('createuserUsername').value,
+                password:document.getElementById('createuserPassword').value
+            }),
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success == true) {
+                logindiv.style.display = 'block'
+                createprofileDiv.style.display = 'none'
+                console.log("user successfully created")
+            }   else {
+                console.error("createuserfeil")
+            }
+        })
+    })
+    
     
 }
 
 checkIfSessionActive()
-spesknapp.addEventListener('click', getAllUsernames)
 knapp.addEventListener('click', login)
 showcreateProfile.addEventListener('click',showcreateprofileFunc)
 createuserButton.addEventListener('click', createprofile)

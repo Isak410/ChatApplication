@@ -3,27 +3,18 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const session = require('express-session')
-const sessionLength = 1*60*5 //hvor mange sekunder til session slettes
+const sessionLength = 1*60*60 //hvor mange sekunder til session slettes
 //const router = express.Router()
 const { Server } = require('socket.io');
 const io = new Server(server);
 
 var users = {
-    'user1':{username:'Isak', password:'Isak123'},
-    'user2':{username:'Adrian', password:'Adrian123'},
-    'user3':{username:'Albert', password:'Albert123'},
-    'user4':{username:'Håkon', password:'Håkon123'},
-    'user5':{username:'Thomas', password:'Thomas123'},
-    'user6':{username:'Gabriel', password:'Gabriel123'},
-    'user7':{username:'Terje', password:'Terje123'},
+    'user1':{username:'Admin', password:'Admin123'},
 }
 
-var totalRoomsCreated = 4
+var totalRoomsCreated = 0
 var chatRooms = [
-    {id:0,roomName:'heihei',users:['Isak','Adrian','Håkon']},
-    {id:1,roomName:'rom2',users:['Albert','Adrian','Håkon']},
-    {id:2,roomName:'Gamers',users:['Isak','Adrian','Håkon']},
-    {id:3,roomName:'gompers',users:['Isak','Adrian','Håkon']}
+
 ]
 
 app.use(express.json())
@@ -32,7 +23,13 @@ app.get('/', (req, res) => {
     res.sendFile(__dirname + '/public/index.html');
 });
 
-
+app.post('/createUser', (req,res) => {
+    const { username, password } = req.body
+    var usernum = "user"+(Object.keys(users).length+1)
+    users[usernum] = {'username':username,'password':password}
+    res.json({ success:true })
+    console.log(users)
+})
 
 app.use(session({
     secret: 'secret-key',
@@ -44,12 +41,14 @@ app.use(session({
 app.post('/checkifusernametaken', (req,res) => {
     const { username } = req.body
     var bool = false
-    for (var key in users) {
-        if (person[key].username == username) {
-            bool = true
+    for (var userKey in users) {
+        if (users.hasOwnProperty(userKey)) {
+            if (users[userKey].username == username) {
+                bool = true
+            }
         }
     }
-    res.json(bool)
+    res.json({usernametaken:bool})
 })
 
 function cookieStillValid(cookie) {
