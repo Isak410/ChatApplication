@@ -3,26 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Chat</title>
     <link rel="shortcut icon" href="Assets/download__1__removebg_preview_TQO_icon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="chatpage.css">
 </head>
 <body>
-    <div id="logindiv">
-        <input type="text" id="input0" placeholder="brukernavn"> <br>
-        <input type="text" id="input1" placeholder="passord"> <br>
-        <button id="knapp">Submit</button> 
-        <h6 id="loginField"></h6>
-        <button id="showcreateProfile">No profile?</button>
-    </div>
-
-    <div id="createProfile">
-        <input type="text" id="createuserUsername" placeholder="Username"> <br>
-        <input type="password" id="createuserPassword" placeholder="Password"> <br>
-        <button id="createuserButton">Submit</button>
-        <h6 id="createProfileh6"></h6>
-    </div>
-
+    <script>
+    //sjekk om det er en aktiv session
+    fetch('/checkSession')
+    .then(res => res.json())
+    .then(data => {
+        if (data == false) {
+            window.location.href = '/showloginpage'
+            }
+        })
+    </script>
     <div id="formDiv">
         <div id="tabcontainer">
             <div class="tab" onclick="openTab('tab1')">Tab 1</div>
@@ -41,8 +36,7 @@
             
         </div>
     </div>
-
     <script src="/socket.io/socket.io.js"></script>
-    <script src="script.js"></script>
+    <script src="chatpage.js"></script>
 </body>
 </html>

@@ -1,0 +1,19 @@
+h2 {
+    margin: 0;
+}
+
+#createProfile {
+    text-align: center;
+    width: 200px;
+    display: flex;
+    flex-direction: column
+}
+
+input {
+    margin-bottom: 3px;
+}
+
+p {
+    color: rgb(227, 64, 64);
+    margin: 0;
+}

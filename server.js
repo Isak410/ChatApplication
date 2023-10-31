@@ -19,9 +19,7 @@ var chatRooms = [
 
 app.use(express.json())
 
-app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/public/index.html');
-});
+
 
 app.post('/createUser', (req,res) => {
     const { username, password } = req.body
@@ -169,9 +167,25 @@ app.get('/allchatrooms', (req,res) => {
     res.json(chatRooms)
 }) 
 
+app.get('/showcreateprofilepage', (req,res) => {
+    res.sendFile(__dirname + '/public/createprofile.html')
+})
+
+app.get('/showmessagepage', (req,res) => {
+    res.sendFile(__dirname + '/public/chatpage.html')
+})
+
+app.get('/showloginpage', (req,res) => {
+    res.sendFile(__dirname + '/public/login.html')
+})
 
 
 app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+    const htmlFile = '/public/login.html'
+    res.sendFile(__dirname + htmlFile);
+});
 
 server.listen(8080, () => {
     console.log('Listening on 8080');
