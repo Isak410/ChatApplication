@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    
+
     const formdiv = document.getElementById('formDiv')
     var prevTime = [0,0]
     var selectedRoom = 'global'
@@ -30,20 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
         input.value = '';
       });
 
-    async function activateIO() {
-        socket.emit('userlogin')
-        fetch('/allchatrooms')
-        .then(res => res.json())
-        .then(data => {
-            loadtabs(data)
-        })
-        myUsername = await getMyUsername()
-    }
-
-    function sendmessage(e) {
-        
-    }
-
     async function loadtabinfo() {
         var arr = await getAllUsernames()
         var myUser = await getMyUsername()
@@ -52,29 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('createnewtabmenu').style.pointerEvents = "all"
         var menudiv = document.getElementById('createnewtabmenu')
         menudiv.textContent = ''
-        var tabinput = document.createElement('input')
-        tabinput.type = 'text'
-        tabinput.placeholder = 'room name'
-        tabinput.id = 'tabnavn'
+        var tabinput = Object.assign(document.createElement('input'), {type:'text',placeholder:'room name',id:'tabnavn'})
         menudiv.appendChild(tabinput)
         for (let i = 0; i < arr.length; i++) {
             if (arr[i] != myUser) {
             var div = document.createElement('div')
-            
-            var newInput = document.createElement('input')
-            newInput.type = "checkbox"
-            newInput.class = "checkboxes"
-            newInput.id = ("checkbox"+arr[i])
-            newInput.value = arr[i]
+            var newInput = Object.assign(document.createElement('input'),{type:'checkbox',className:'checkboxes',id:'checkbox'+arr[i],value:arr[i]})
             var tekst = document.createTextNode(arr[i])
             div.appendChild(newInput)
             div.appendChild(tekst)
             menudiv.appendChild(div)
             }
         }
-        var newKnapp = document.createElement('button')
-        newKnapp.id = "newTabKnapp"
-        newKnapp.textContent = "submit"
+        var newKnapp = Object.assign(document.createElement('button'),{id:'newTabKnapp',textContent:'submit'})
         newKnapp.addEventListener('click', createNewTab)
         var h6tag = document.createElement('h6')
         h6tag.id = 'menuh6'
@@ -121,20 +97,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('tabcontainer').appendChild(newDiv)
         }
         for (let i = 0; i < arr1.length;i++) {
-
-            var newMessageDiv = document.createElement('div')
-            newMessageDiv.className = 'messages'
-            newMessageDiv.id = ('chat'+allchatrooms[arr1[i]].id)
+            var newMessageDiv = Object.assign(document.createElement('div'), {className:'messages',id:'chat'+allchatrooms[arr1[i]].id})
             newMessageDiv.style.display = 'none'
+            var time = getTime()
+            var timeStamp = Object.assign(document.createElement("p"), {id:'timeStamp',textContent:(time[0]+':'+time[1])})
+            var timeStampDiv = Object.assign(document.createElement("div"),{id:'timeStampDiv'})
+            timeStampDiv.appendChild(timeStamp)
+            newMessageDiv.appendChild(timeStampDiv)
             document.getElementById('allmessagedivs').appendChild(newMessageDiv)
-            console.log(formdiv.children.length)
-    
-    
+            prevTime = [time[0],time[1]]
         }
-    
-        var newClickabc = document.createElement('div')
-        newClickabc.className = 'tab'
-        newClickabc.id = 'clickabc'
+        var newClickabc = Object.assign(document.createElement('div'),{className:'tab',id:'clickabc'})
         newClickabc.appendChild(document.createTextNode('+'))
         newClickabc.addEventListener('click', loadtabinfo)
         document.getElementById('tabcontainer').appendChild(newClickabc)
@@ -186,6 +159,23 @@ document.addEventListener('DOMContentLoaded', () => {
         resetTabMenu(arr)
     }
 
+    async function openTab(roomname) {
+            console.log(roomname)
+            var allmessagedivs = document.getElementsByClassName('messages')
+            for (let i = 0; i < allmessagedivs.length; i++){
+                allmessagedivs[i].style.display = "none"
+            }
+            document.getElementById('chat'+roomname).style.display = "block"
+            console.log("opened tab")
+    }
+
+    function resetTabMenu(arr) {
+        document.getElementById('createnewtabmenu').style.display = "none"
+        for (let i = 0; i < arr.length; i++) {
+    
+        }
+    }
+
     async function getMyUsername() {
         const username = await fetch('/sendUsername')
         .then(res => res.json())
@@ -209,25 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return ([time, minutter, sekunder])
     }
 
-    async function openTab(roomname) {
-        console.log(roomname)
-        var allmessagedivs = document.getElementsByClassName('messages')
-        for (let i = 0; i < allmessagedivs.length; i++){
-            allmessagedivs[i].style.display = "none"
-        }
-        document.getElementById('chat'+roomname).style.display = "block"
-        console.log("opened tab")
-    }
-
-    function resetTabMenu(arr) {
-        document.getElementById('createnewtabmenu').style.display = "none"
-        for (let i = 0; i < arr.length; i++) {
-    
-        }
-    }
-
     async function loadChatmessage(msg) {
-
         var divToAppendTo = document.getElementById('chat'+msg.room)
         console.log(myUsername)
         console.log(prevTime)
@@ -266,8 +238,15 @@ document.addEventListener('DOMContentLoaded', () => {
           scrollableDiv.scrollTop = scrollableDiv.scrollHeight;
     }
 
-
-
+    async function activateIO() {
+            socket.emit('userlogin')
+            fetch('/allchatrooms')
+            .then(res => res.json())
+            .then(data => {
+                loadtabs(data)
+            })
+            myUsername = await getMyUsername()
+    }
 
     socket.on('chatmessage', (msg) => {
         loadChatmessage(msg)
