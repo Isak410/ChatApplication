@@ -3,13 +3,14 @@ const app = express();
 const http = require('http');
 const server = http.createServer(app);
 const session = require('express-session')
-const sessionLength = 1*60*60 //hvor mange sekunder til session slettes
-//const router = express.Router()
+const sessionLength = 1*60*5 //hvor mange sekunder til session slettes
+const sharedSession = require('express-socket.io-session');
 const { Server } = require('socket.io');
 const io = new Server(server);
 
 var users = {
     'user1':{username:'Admin', password:'Admin123'},
+    'user2':{username:'Isak', password:'Isak123'},
 }
 
 var totalRoomsCreated = 0
@@ -29,12 +30,16 @@ app.post('/createUser', (req,res) => {
     console.log(users)
 })
 
-app.use(session({
+const sessionMiddleware = session({
     secret: 'secret-key',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge:sessionLength*1000 }
-}))
+})
+
+app.use(sessionMiddleware)
+
+io.use(sharedSession(sessionMiddleware, { autoSave: true }));
 
 app.post('/checkifusernametaken', (req,res) => {
     const { username } = req.body
@@ -50,7 +55,6 @@ app.post('/checkifusernametaken', (req,res) => {
 })
 
 function cookieStillValid(cookie) {
-    console.log(new Date())
     if (cookie.expires < new Date()) {
         return false
     } else {return true}
@@ -73,6 +77,19 @@ app.get('/allUsernames', (req,res) => {
     for (let i = 0; i < Object.values(users).length; i++) {
         arr[i] = userList[i].username
     }
+    res.json(arr)
+})
+
+app.get('/userschatrooms', (req,res) => {
+    const username = req.session.username
+    var arr = []
+    for (let i = 0; i < chatRooms.length; i++) {
+        const index = chatRooms[i].users.indexOf(username)
+        if (index !== -1) {
+            arr.push[chatRooms[i].id]
+        }
+    }
+    console.log(arr)
     res.json(arr)
 })
 
@@ -101,9 +118,20 @@ io.on('connection', (socket) => {
     console.log('a user connected');
     socket.on('userlogin', () => {
         socket.join('LoggedIn')
-        io.to('LoggedIn').emit('message', 'heiheiehiheiehije')
+
+        const username = socket.handshake.session.username
+        var arr = []
+        for (let i = 0; i < chatRooms.length; i++) {
+            const index = chatRooms[i].users.indexOf(username)
+            if (index !== -1) {
+                arr.push(chatRooms[i].id)
+            }
+        }
+        console.log(arr)
+        io.to('LoggedIn').emit('userjoin', {roomids:arr,user:username})
     })
     socket.on('joinchatrooms', (roomids) => {
+        
         console.log(roomids)
         for(let i = 0; i < roomids.length; i++){
             socket.join('chatroom'+roomids[i])
@@ -114,6 +142,24 @@ io.on('connection', (socket) => {
     socket.on('chat message', (data) => {
         console.log(data)
     })
+
+    socket.on('disconnect', () => {
+    console.log("fjklawbfbjklaw")
+    const username = socket.handshake.session.username
+    var arr = []
+    for (let i = 0; i < chatRooms.length; i++) {
+        const index = chatRooms[i].users.indexOf(username)
+        if (index !== -1) {
+            arr.push(chatRooms[i].id)
+        }
+    }
+    console.log(arr)
+    io.to('LoggedIn').emit('userleave', {roomids:arr,user:username})
+    for (let i = 0; i < arr.length; i++) {
+        console.log('chatroom'+arr[i])
+        io.to('chatroom'+arr[i]).emit('userleave', {roomids:arr,user:username})
+    }
+    });
 })
 
 app.post('/sendmessage', (req,res) => {

@@ -103,3 +103,32 @@ body {
     display: flex;
     justify-content: center;
 }
+
+#userInterfacecontainer {
+    width: 150px;
+    min-width: 150px;
+    height: 250px;
+    border: solid gray;
+    border-radius: 3px;
+}
+
+.allui {
+    width: 100%;
+    height: fit-content;
+    overflow-x:hidden;
+    overflow-y: auto;
+}
+
+.allui p {
+    width: fit-content;
+    background-color: transparent;
+    margin: 2px;
+    padding: 0;
+    font-size: 0.7em;
+    word-wrap: break-word;
+    max-width: 144px;
+}
+
+h3 {
+    margin: 0;
+}

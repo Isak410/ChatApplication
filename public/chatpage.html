@@ -10,20 +10,24 @@
 <body>
     <script>
     //sjekk om det er en aktiv session
+    var sessionobj = {
+        checkses:function() {
     fetch('/checkSession')
     .then(res => res.json())
     .then(data => {
+        console.log("checked session")
         if (data == false) {
             window.location.href = '/showloginpage'
             }
         })
+    }
+    }
+    sessionobj.checkses()
+    var intervalID = setInterval(sessionobj.checkses, 1000)
     </script>
+
     <div id="formDiv">
         <div id="tabcontainer">
-            <div class="tab" onclick="openTab('tab1')">Tab 1</div>
-            <div class="tab" onclick="openTab('tab2')">Tab 2</div>
-            <div class="tab" onclick="openTab('tab2')">Tab 2</div>
-
         </div>
         <div id="allmessagedivs">
         <div class="messages" id="chatglobal">
@@ -32,9 +36,11 @@
         <form id="form" action="">
             <input id="m" autocomplete="off" /><button type="submit">Send</button>
         </form>
-        <div id="createnewtabmenu">
-            
+        <div id="createnewtabmenu"></div>
         </div>
+    <div id="userInterfacecontainer">
+        <h3>Users connected</h3>
+        <div class="allui" id="userInterface"></div>
     </div>
     <script src="/socket.io/socket.io.js"></script>
     <script src="chatpage.js"></script>

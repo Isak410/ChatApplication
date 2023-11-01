@@ -1,14 +1,16 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     const formdiv = document.getElementById('formDiv')
+    const userInterfaceDiv = document.getElementById('userInterface')
     var prevTime = [0,0]
     var selectedRoom = 'global'
     var myUsername
     var socket = io();
     var form = document.getElementById('form');
     var input = document.getElementById('m');
-
+    var uislooped = false
     form.addEventListener('submit', function (e) {
+        sessionobj.checkses()
         e.preventDefault(); // Prevent the default form submission behavior
         if (input.value == "") {return}
         let tid = getTime()  
@@ -83,6 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }   
             document.querySelector('#chatglobal').style.display = 'block'
             selectedRoom = 'global'
+            var alluis = document.getElementsByClassName('allui')
+            for (let i = 0; i < alluis.length; i++) {
+                alluis[i].style.display = 'none'
+            }
+            userInterfaceDiv.style.display = 'block'
         })
         document.getElementById('tabcontainer').appendChild(globalchatdiv)
         for (let i = 0; i < arr1.length; i++) {
@@ -96,7 +103,17 @@ document.addEventListener('DOMContentLoaded', () => {
                     }(allchatrooms[arr1[i]].id))
                 document.getElementById('tabcontainer').appendChild(newDiv)
         }
+
+        if (uislooped == true) {
+            var newuserinterface = Object.assign(document.createElement('div'),{className:'allui',id:'uidivs'+allchatrooms[arr1[arr1.length-1]].id,style: { display:'none'}})
+            document.getElementById('userInterfacecontainer').appendChild(newuserinterface)
+        }
+        
         for (let i = 0; i < arr1.length;i++) {
+            if (uislooped == false) {
+            var newuserinterface = Object.assign(document.createElement('div'),{className:'allui',id:'uidivs'+allchatrooms[arr1[i]].id,style: { display:'none'}})
+            document.getElementById('userInterfacecontainer').appendChild(newuserinterface)
+            }
             var newMessageDiv = Object.assign(document.createElement('div'), {className:'messages',id:'chat'+allchatrooms[arr1[i]].id})
             newMessageDiv.style.display = 'none'
             var time = getTime()
@@ -107,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('allmessagedivs').appendChild(newMessageDiv)
             prevTime = [time[0],time[1]]
         }
+        uislooped = true
         var newClickabc = Object.assign(document.createElement('div'),{className:'tab',id:'clickabc'})
         newClickabc.appendChild(document.createTextNode('+'))
         newClickabc.addEventListener('click', loadtabinfo)
@@ -160,6 +178,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function openTab(roomname) {
+            sessionobj.checkses()
             console.log(roomname)
             var allmessagedivs = document.getElementsByClassName('messages')
             for (let i = 0; i < allmessagedivs.length; i++){
@@ -167,6 +186,17 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             document.getElementById('chat'+roomname).style.display = "block"
             console.log("opened tab")
+            
+            document.getElementById('userInterface').style.display = 'none'
+            var alluis = document.getElementsByClassName('allui')
+            for (let i = 0; i < alluis.length; i++) {
+                alluis[i].style.display = 'none'
+            }
+            if(document.getElementById('uidivs'+roomname) !== null) {
+                document.getElementById('uidivs'+roomname).style.display = 'block'
+            }   else {
+                document.getElementById('userInterface').style.display = 'block'
+            }
     }
 
     function resetTabMenu(arr) {
@@ -247,6 +277,43 @@ document.addEventListener('DOMContentLoaded', () => {
             })
             myUsername = await getMyUsername()
     }
+
+    async function checkUserChatrooms() {
+        fetch('/userschatrooms')
+        .then(res => res.json())
+        .then(data => {
+            console.log(data)
+            return(data)
+        })
+    }
+
+    function doesElementExist(elementId) {
+        if (elementId.insidediv == false) {
+            const element = document.getElementById(elementId)
+            if (element == null) {return false} else {return true}
+        }   else{
+            const element1 = document.getElementById(elementId.parentdiv)
+            const element2 = element1.querySelector('#'+elementId.id)
+            if (element2 == null) {return false} else {return true}
+        }
+    }
+
+    socket.on('userleave', (data) => {
+        console.log(data.roomids)
+        console.log(data.user)
+    })
+
+    socket.on('userjoin', (data) => {
+        if (doesElementExist({id:'uitext'+data.user,insidediv:false}) == false) {
+        userInterfaceDiv.appendChild(Object.assign(document.createElement('p'),{textContent:data.user,id:('uitext'+data.user)}))
+        }
+        console.log(data.roomids)
+        for (let i = 0; i < data.roomids.length; i++) {
+            if (doesElementExist({id:'uitext'+data.user,insidediv:true,parentdiv:'uidivs'+data.roomids[i]}) == false) {
+            document.getElementById('uidivs'+data.roomids[i]).appendChild(Object.assign(document.createElement('p'),{textContent:data.user,id:('uitext'+data.user)}))
+            }
+        }
+    })
 
     socket.on('chatmessage', (msg) => {
         loadChatmessage(msg)
