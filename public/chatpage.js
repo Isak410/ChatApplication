@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     var form = document.getElementById('form');
     var input = document.getElementById('m');
     var uislooped = false
+    var myuserinterfacediv = document.getElementById('myuserinterface')
+    var logoutbutton = document.getElementById('logout')
     form.addEventListener('submit', function (e) {
         sessionobj.checkses()
         e.preventDefault(); // Prevent the default form submission behavior
@@ -111,7 +113,8 @@ document.addEventListener('DOMContentLoaded', () => {
         
         for (let i = 0; i < arr1.length;i++) {
             if (uislooped == false) {
-            var newuserinterface = Object.assign(document.createElement('div'),{className:'allui',id:'uidivs'+allchatrooms[arr1[i]].id,style: { display:'none'}})
+            var newuserinterface = Object.assign(document.createElement('div'),{className:'allui',id:'uidivs'+allchatrooms[arr1[i]].id})
+            newuserinterface.style.display = 'none'
             document.getElementById('userInterfacecontainer').appendChild(newuserinterface)
             }
             var newMessageDiv = Object.assign(document.createElement('div'), {className:'messages',id:'chat'+allchatrooms[arr1[i]].id})
@@ -218,6 +221,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return data;
     }
 
+    async function loadMyUserInterface() {
+        const username = await getMyUsername()
+        var uititle = document.createElement('h2')
+        uititle.textContent = username
+        myuserinterfacediv.appendChild(uititle)
+    }
+
     function getTime() {
         const dato = new Date()
         var time = dato.getHours()
@@ -289,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function doesElementExist(elementId) {
         if (elementId.insidediv == false) {
-            const element = document.getElementById(elementId)
+            const element = document.getElementById(elementId.id)
             if (element == null) {return false} else {return true}
         }   else{
             const element1 = document.getElementById(elementId.parentdiv)
@@ -299,8 +309,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     socket.on('userleave', (data) => {
-        console.log(data.roomids)
-        console.log(data.user)
+        if (document.getElementById('uitext'+data.user)){
+            document.getElementById('uitext'+data.user).remove()
+        }
     })
 
     socket.on('userjoin', (data) => {
@@ -324,4 +335,9 @@ document.addEventListener('DOMContentLoaded', () => {
     })
 
     activateIO()
+    loadMyUserInterface()
+    logoutbutton.addEventListener('click', () => {
+        fetch('/destroysession')
+        sessionobj.checkses()
+    })
 })

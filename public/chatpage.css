@@ -112,6 +112,20 @@ body {
     border-radius: 3px;
 }
 
+#myuserinterface {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 150px;
+    min-width: 150px;
+    height: 250px;
+    border: solid gray;
+    border-radius: 3px;
+}
+
+#ahgf {
+    height: 100%;
+}
+
 .allui {
     width: 100%;
     height: fit-content;
@@ -131,4 +145,15 @@ body {
 
 h3 {
     margin: 0;
+    word-wrap: break-word;
+}
+
+h2 {
+    margin: 0;
+    word-wrap: break-word;
+}
+
+#logout {
+    width: 100%;
+    color: red;
 }

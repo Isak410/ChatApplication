@@ -21,13 +21,11 @@ var chatRooms = [
 app.use(express.json())
 
 
-
 app.post('/createUser', (req,res) => {
     const { username, password } = req.body
     var usernum = "user"+(Object.keys(users).length+1)
     users[usernum] = {'username':username,'password':password}
     res.json({ success:true })
-    console.log(users)
 })
 
 const sessionMiddleware = session({
@@ -63,11 +61,9 @@ function cookieStillValid(cookie) {
 app.get('/sendUsername', (req,res) => {
     if (!req.session.username || !cookieStillValid(req.session.cookie)) {
         req.session.destroy();
-        console.log("session destroyed");
         res.json('No active session');
         return;
     }
-    console.log(req.session.username);
     res.json(req.session.username);
 })
 
@@ -89,7 +85,6 @@ app.get('/userschatrooms', (req,res) => {
             arr.push[chatRooms[i].id]
         }
     }
-    console.log(arr)
     res.json(arr)
 })
 
@@ -114,8 +109,11 @@ app.get('/checkSession', (req,res) => {
     }   else {res.json(false)}             
 })
 
+app.get('/destroysession', (req,res) => {
+    req.session.destroy()
+})
+
 io.on('connection', (socket) => {
-    console.log('a user connected');
     socket.on('userlogin', () => {
         socket.join('LoggedIn')
 
@@ -127,36 +125,26 @@ io.on('connection', (socket) => {
                 arr.push(chatRooms[i].id)
             }
         }
-        console.log(arr)
         io.to('LoggedIn').emit('userjoin', {roomids:arr,user:username})
     })
     socket.on('joinchatrooms', (roomids) => {
-        
-        console.log(roomids)
         for(let i = 0; i < roomids.length; i++){
             socket.join('chatroom'+roomids[i])
         }
-        console.log(socket.rooms)
-
-    })
-    socket.on('chat message', (data) => {
-        console.log(data)
     })
 
     socket.on('disconnect', () => {
-    console.log("fjklawbfbjklaw")
     const username = socket.handshake.session.username
-    var arr = []
-    for (let i = 0; i < chatRooms.length; i++) {
-        const index = chatRooms[i].users.indexOf(username)
-        if (index !== -1) {
-            arr.push(chatRooms[i].id)
+        var arr = []
+        for (let i = 0; i < chatRooms.length; i++) {
+            const index = chatRooms[i].users.indexOf(username)
+            if (index !== -1) {
+                arr.push(chatRooms[i].id)
+            }
         }
-    }
-    console.log(arr)
+        io.to('LoggedIn').emit('userjoin', {roomids:arr,user:username})
     io.to('LoggedIn').emit('userleave', {roomids:arr,user:username})
     for (let i = 0; i < arr.length; i++) {
-        console.log('chatroom'+arr[i])
         io.to('chatroom'+arr[i]).emit('userleave', {roomids:arr,user:username})
     }
     });
@@ -171,30 +159,24 @@ app.post('/sendmessage', (req,res) => {
         "timeOfSend":sendTimeArr,
         "message":message
     }
-    console.log(selectedRoom)
     if (selectedRoom == 'global') {
     io.to('LoggedIn').emit('chatmessage', myObj)
     }   else {
         io.to('chatroom'+selectedRoom).emit('chatmessage', myObj)
     }
-
-    console.log(myObj)
-
     res.json("successfull")
 })
 
 app.post('/newchatroom', (req,res) => {
     const { usersChecked, roomName } = req.body
-    console.log(usersChecked)
-    console.log(roomName)
     totalRoomsCreated++
     var myObj = {
         id:totalRoomsCreated,
         roomName:roomName,
-        users:usersChecked
+        users:usersChecked,
+        usersconnected:[]
     }
     chatRooms.push(myObj)
-    console.log(chatRooms)
     io.to('LoggedIn').emit('newchatroom',chatRooms)
 })
 
@@ -209,6 +191,14 @@ app.post('/checkroomnames', (req,res) => {
     res.json(bool)
 })
 
+function checksessionuser(data) {
+    if (data) {
+        return true
+    }   else {
+        return false
+    }
+}
+
 app.get('/allchatrooms', (req,res) => {
     res.json(chatRooms)
 }) 
@@ -218,13 +208,16 @@ app.get('/showcreateprofilepage', (req,res) => {
 })
 
 app.get('/showmessagepage', (req,res) => {
+    if (checksessionuser(req.session.username) == true) {
     res.sendFile(__dirname + '/public/chatpage.html')
+    }   else{
+    res.sendFile(__dirname + '/public/login.html')
+    }
 })
 
 app.get('/showloginpage', (req,res) => {
     res.sendFile(__dirname + '/public/login.html')
 })
-
 
 app.use(express.static('public'));
 

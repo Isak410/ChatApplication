@@ -10,5 +10,4 @@ function checksession() {
         }
     })
 }
-
 checksession()
