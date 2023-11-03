@@ -1,0 +1,44 @@
+body {
+    display: flex;
+    justify-content: center;
+}
+
+
+#createProfile {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: solid gray 2px;
+    padding: 5px;
+    padding-top: 0px;
+    border-radius: 4px;
+}
+
+input {
+    margin-bottom: 3px;
+}
+
+button {
+    background-color: rgb(45, 189, 45);
+    color: white;
+    border-radius: 5px;
+    border: 0;
+    width: fit-content;
+}
+
+
+h6 {
+    color: rgb(227, 64, 64);
+    margin: 0;
+    margin-top: 3px;
+}
+
+h2 {
+    margin: 0;
+}
+
+a {
+    font-size: 0.5em;
+    margin: 0;
+}

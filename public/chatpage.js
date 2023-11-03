@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', () => {
     var uislooped = false
     var myuserinterfacediv = document.getElementById('myuserinterface')
     var logoutbutton = document.getElementById('logout')
+
     form.addEventListener('submit', function (e) {
         sessionobj.checkses()
         e.preventDefault(); // Prevent the default form submission behavior
@@ -281,15 +282,6 @@ document.addEventListener('DOMContentLoaded', () => {
     async function activateIO() {
         socket.emit('userlogin')
         myUsername = await getMyUsername()
-    }
-
-    async function checkUserChatrooms() {
-        fetch('/userschatrooms')
-        .then(res => res.json())
-        .then(data => {
-            console.log(data)
-            return(data)
-        })
     }
 
     function doesElementExist(elementId) {

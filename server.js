@@ -10,28 +10,25 @@ const { Server } = require('socket.io');
 const io = new Server(server);
 
 
-var newMessages = [
-    
-]
-
+var newMessages = []
 var newChatrooms = []
 
 var totalRoomsCreated = 0
-var chatRooms = [
 
-]
+
+
 
 app.use(express.json())
 
 
 app.post('/createUser', (req,res) => {
     const { username, password } = req.body
-    fs.readFile(__dirname+'/public/users.json','utf8',function(err,data){
+    fs.readFile(__dirname+'/public/Storage/users.json','utf8',function(err,data){
         if(err){console.log(err);return}
         var parsedData = JSON.parse(data)
         var usernum = "user"+(Object.keys(parsedData).length+1)
         parsedData[usernum] = {'username':username,'password':password}
-        fs.writeFile(__dirname+'/public/users.json',JSON.stringify(parsedData),function(err){
+        fs.writeFile(__dirname+'/public/Storage/users.json',JSON.stringify(parsedData),function(err){
             if(err)console.log(err)
             else console.log('successfully created user')
             res.json({success:true})
@@ -48,7 +45,7 @@ const sessionMiddleware = session({
 
 async function saveMessages() {
     if (newMessages.length == 0) return;
-    fs.readFile(__dirname+'/public/messages.json', 'utf8', function(err,data){
+    fs.readFile(__dirname+'/public/Storage/messages.json', 'utf8', function(err,data){
         if (err) {console.log(err);return}
         var dataFromJsonFile = JSON.parse(data)
         console.log(dataFromJsonFile)
@@ -56,7 +53,7 @@ async function saveMessages() {
             dataFromJsonFile.messages.push(newMessages[i])
         }
         newMessages = []
-        fs.writeFile(__dirname+'/public/messages.json', JSON.stringify(dataFromJsonFile), function(err) {
+        fs.writeFile(__dirname+'/public/Storage/messages.json', JSON.stringify(dataFromJsonFile), function(err) {
             if (err) console.log(err)
             else console.log('successfully wrote file')
         })
@@ -64,7 +61,7 @@ async function saveMessages() {
 }
 
 app.get('/getMessages', (req,res) => {
-    fs.readFile(__dirname+'/public/messages.json','utf8',function(err,data){
+    fs.readFile(__dirname+'/public/Storage/messages.json','utf8',function(err,data){
         if(err){console.log(err);return}
         var info = JSON.parse(data)
         res.json(info)
@@ -79,7 +76,7 @@ io.use(sharedSession(sessionMiddleware, { autoSave: true }));
 app.post('/checkifusernametaken', (req,res) => {
     const { username } = req.body
     var bool = false
-    fs.readFile(__dirname+'/public/users.json','utf8',function(err,data){
+    fs.readFile(__dirname+'/public/Storage/users.json','utf8',function(err,data){
         if(err){console.log(err);return}
         var users = JSON.parse(data)
         for (var userKey in users) {
@@ -89,8 +86,8 @@ app.post('/checkifusernametaken', (req,res) => {
                 }
             }
         }
+        res.json({usernametaken:bool})
     })
-    res.json({usernametaken:bool})
 })
 
 function cookieStillValid(cookie) {
@@ -109,7 +106,7 @@ app.get('/sendUsername', (req,res) => {
 })
 
 app.get('/allUsernames', (req,res) => {
-    fs.readFile(__dirname+'/public/users.json', 'utf8', function(err,data){
+    fs.readFile(__dirname+'/public/Storage/users.json', 'utf8', function(err,data){
         if(err){console.log(err);return}
         var users = JSON.parse(data)
         const userList = Object.values(users);
@@ -121,21 +118,9 @@ app.get('/allUsernames', (req,res) => {
     })
 })
 
-app.get('/userschatrooms', (req,res) => {
-    const username = req.session.username
-    var arr = []
-    for (let i = 0; i < chatRooms.length; i++) {
-        const index = chatRooms[i].users.indexOf(username)
-        if (index !== -1) {
-            arr.push[chatRooms[i].id]
-        }
-    }
-    res.json(arr)
-})
-
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    fs.readFile(__dirname+'/public/users.json','utf8',function(err,data){
+    fs.readFile(__dirname+'/public/Storage/users.json','utf8',function(err,data){
         if(err){console.log(err);return}
         var parsedUsers = JSON.parse(data)
         const userList = Object.values(parsedUsers);
@@ -168,38 +153,12 @@ app.get('/destroysession', (req,res) => {
 io.on('connection', (socket) => {
     socket.on('userlogin', () => {
         socket.join('LoggedIn')
-
-        const username = socket.handshake.session.username
-        var arr = []
-        for (let i = 0; i < chatRooms.length; i++) {
-            const index = chatRooms[i].users.indexOf(username)
-            if (index !== -1) {
-                arr.push(chatRooms[i].id)
-            }
-        }
-        io.to('LoggedIn').emit('userjoin', {roomids:arr,user:username})
     })
     socket.on('joinchatrooms', (roomids) => {
         for(let i = 0; i < roomids.length; i++){
             socket.join('chatroom'+roomids[i])
         }
     })
-
-    socket.on('disconnect', () => {
-    const username = socket.handshake.session.username
-        var arr = []
-        for (let i = 0; i < chatRooms.length; i++) {
-            const index = chatRooms[i].users.indexOf(username)
-            if (index !== -1) {
-                arr.push(chatRooms[i].id)
-            }
-        }
-        io.to('LoggedIn').emit('userjoin', {roomids:arr,user:username})
-    io.to('LoggedIn').emit('userleave', {roomids:arr,user:username})
-    for (let i = 0; i < arr.length; i++) {
-        io.to('chatroom'+arr[i]).emit('userleave', {roomids:arr,user:username})
-    }
-    });
 })
 
 app.post('/sendmessage', (req,res) => {
@@ -222,39 +181,40 @@ app.post('/sendmessage', (req,res) => {
 
 app.post('/newchatroom', (req,res) => {
     const { usersChecked, roomName } = req.body
-    totalRoomsCreated++
-    var myObj = {
-        id:totalRoomsCreated,
-        roomName:roomName,
-        users:usersChecked,
-        usersconnected:[]
-    }
-    fs.readFile(__dirname+'/public/chatrooms.json', 'utf8', function(err,data){
+    fs.readFile(__dirname+'/public/Storage/chatrooms.json', 'utf8', function(err,data){
         if(err){console.log(err);return}
         var allchatrooms = JSON.parse(data)
+        var myObj = {
+            id:allchatrooms.chatrooms.length+1,
+            roomName:roomName,
+            users:usersChecked,
+            usersconnected:[]
+        }
         allchatrooms.chatrooms.push(myObj)
+        newChatrooms.push(myObj)
         io.to('LoggedIn').emit('newchatroom',allchatrooms.chatrooms)
-        fs.writeFile(__dirname+'/public/chatrooms.json',JSON.stringify(allchatrooms),function(err){
+        fs.writeFile(__dirname+'/public/Storage/chatrooms.json',JSON.stringify(allchatrooms),function(err){
             if(err)console.log(err)
             else console.log('successfully created chatroom')
             res.json({success:true})
         })
     })
-    newChatrooms.push(myObj)
-    console.log(newChatrooms)
-    chatRooms.push(myObj)
     
 })
 
 app.post('/checkroomnames', (req,res) => {
     const { navn } = req.body
-    var bool = false
-    for (let i = 0; i < chatRooms.length; i++) {
-        if (chatRooms[i].roomName == navn) {
-            bool = true
+    fs.readFile(__dirname+'/public/Storage/chatrooms.json','utf8',function(err,data){
+        if(err){console.log(err);return}
+        var parsedData = JSON.parse(data)
+        var bool = false
+        for(let i = 0; i < parsedData.chatrooms.length; i++){
+            if(parsedData.chatrooms[i].roomName == navn){
+                bool = true
+            }
         }
-    }
-    res.json(bool)
+        res.json(bool)
+    })
 })
 
 function checksessionuser(data) {
@@ -266,7 +226,7 @@ function checksessionuser(data) {
 }
 
 app.get('/allchatrooms', (req,res) => {
-    fs.readFile(__dirname+'/public/chatrooms.json','utf8',function(err,data){
+    fs.readFile(__dirname+'/public/Storage/chatrooms.json','utf8',function(err,data){
         if(err){console.log(err);return}
         var parsedData = JSON.parse(data)
         res.json(parsedData.chatrooms)
