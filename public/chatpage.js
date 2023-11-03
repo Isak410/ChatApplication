@@ -308,6 +308,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    async function loadAllMessages() {
+        fetch('/getMessages')
+        .then(res => res.json())
+        .then(data => {
+        for (let i = 0; i < data.messages.length; i++) {
+            loadChatmessage(data.messages[i])
+        }
+        })
+        
+    }
+
     socket.on('userleave', (data) => {
         if (document.getElementById('uitext'+data.user)){
             document.getElementById('uitext'+data.user).remove()
@@ -336,6 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     activateIO()
     loadMyUserInterface()
+    loadAllMessages()
     logoutbutton.addEventListener('click', () => {
         fetch('/destroysession')
         sessionobj.checkses()

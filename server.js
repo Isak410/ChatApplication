@@ -5,13 +5,14 @@ const server = http.createServer(app);
 const session = require('express-session')
 const sessionLength = 1*60*5 //hvor mange sekunder til session slettes
 const sharedSession = require('express-socket.io-session');
+const fs = require('fs')
 const { Server } = require('socket.io');
 const io = new Server(server);
 
-var users = {
-    'user1':{username:'Admin', password:'Admin123'},
-    'user2':{username:'Isak', password:'Isak123'},
-}
+
+var newMessages = [
+    
+]
 
 var totalRoomsCreated = 0
 var chatRooms = [
@@ -23,9 +24,17 @@ app.use(express.json())
 
 app.post('/createUser', (req,res) => {
     const { username, password } = req.body
-    var usernum = "user"+(Object.keys(users).length+1)
-    users[usernum] = {'username':username,'password':password}
-    res.json({ success:true })
+    fs.readFile(__dirname+'/public/users.json','utf8',function(err,data){
+        if(err){console.log(err);return}
+        var parsedData = JSON.parse(data)
+        var usernum = "user"+(Object.keys(parsedData).length+1)
+        parsedData[usernum] = {'username':username,'password':password}
+        fs.writeFile(__dirname+'/public/users.json',JSON.stringify(parsedData),function(err){
+            if(err)console.log(err)
+            else console.log('successfully created user')
+            res.json({success:true})
+        })
+    })
 })
 
 const sessionMiddleware = session({
@@ -35,6 +44,32 @@ const sessionMiddleware = session({
     cookie: { maxAge:sessionLength*1000 }
 })
 
+async function saveMessages() {
+    if (newMessages.length == 0) return;
+    fs.readFile(__dirname+'/public/messages.json', 'utf8', function(err,data){
+        if (err) {console.log(err);return}
+        var dataFromJsonFile = JSON.parse(data)
+        console.log(dataFromJsonFile)
+        for (let i = 0; i < newMessages.length; i++) {
+            dataFromJsonFile.messages.push(newMessages[i])
+        }
+        newMessages = []
+        fs.writeFile(__dirname+'/public/messages.json', JSON.stringify(dataFromJsonFile), function(err) {
+            if (err) console.log(err)
+            else console.log('successfully wrote file')
+        })
+    })
+}
+
+app.get('/getMessages', (req,res) => {
+    fs.readFile(__dirname+'/public/messages.json','utf8',function(err,data){
+        if(err){console.log(err);return}
+        var info = JSON.parse(data)
+        res.json(info)
+    })
+})
+
+
 app.use(sessionMiddleware)
 
 io.use(sharedSession(sessionMiddleware, { autoSave: true }));
@@ -42,13 +77,17 @@ io.use(sharedSession(sessionMiddleware, { autoSave: true }));
 app.post('/checkifusernametaken', (req,res) => {
     const { username } = req.body
     var bool = false
-    for (var userKey in users) {
-        if (users.hasOwnProperty(userKey)) {
-            if (users[userKey].username == username) {
-                bool = true
+    fs.readFile(__dirname+'/public/users.json','utf8',function(err,data){
+        if(err){console.log(err);return}
+        var users = JSON.parse(data)
+        for (var userKey in users) {
+            if (users.hasOwnProperty(userKey)) {
+                if (users[userKey].username == username) {
+                    bool = true
+                }
             }
         }
-    }
+    })
     res.json({usernametaken:bool})
 })
 
@@ -90,14 +129,21 @@ app.get('/userschatrooms', (req,res) => {
 
 app.post('/login', (req, res) => {
     const { username, password } = req.body;
-    const userList = Object.values(users);
-    const user = userList.find(u => u.username === username && u.password === password);
-    if (user) {
+    fs.readFile(__dirname+'/public/users.json','utf8',function(err,data){
+        if(err){console.log(err);return}
+        var parsedUsers = JSON.parse(data)
+        const userList = Object.values(parsedUsers);
+        const user = userList.find(u => u.username === username && u.password === password);
+        if (user) {
         req.session.username = username;
         res.json({success:true});
-    } else {
-        res.json({success:false})
-    }
+        } else {
+            res.json({success:false})
+        }
+    })
+    
+    
+    
 });
 
 app.get('/checkSession', (req,res) => {
@@ -159,6 +205,7 @@ app.post('/sendmessage', (req,res) => {
         "timeOfSend":sendTimeArr,
         "message":message
     }
+    newMessages.push(myObj)
     if (selectedRoom == 'global') {
     io.to('LoggedIn').emit('chatmessage', myObj)
     }   else {
@@ -227,5 +274,6 @@ app.get('/', (req, res) => {
 });
 
 server.listen(8080, () => {
+    setInterval(saveMessages, 2000)
     console.log('Listening on 8080');
 });
