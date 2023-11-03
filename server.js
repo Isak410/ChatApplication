@@ -14,6 +14,8 @@ var newMessages = [
     
 ]
 
+var newChatrooms = []
+
 var totalRoomsCreated = 0
 var chatRooms = [
 
@@ -107,12 +109,16 @@ app.get('/sendUsername', (req,res) => {
 })
 
 app.get('/allUsernames', (req,res) => {
-    const userList = Object.values(users);
-    var arr = []
-    for (let i = 0; i < Object.values(users).length; i++) {
-        arr[i] = userList[i].username
-    }
-    res.json(arr)
+    fs.readFile(__dirname+'/public/users.json', 'utf8', function(err,data){
+        if(err){console.log(err);return}
+        var users = JSON.parse(data)
+        const userList = Object.values(users);
+        var arr = []
+        for (let i = 0; i < Object.values(users).length; i++) {
+            arr[i] = userList[i].username
+        }
+        res.json(arr)
+    })
 })
 
 app.get('/userschatrooms', (req,res) => {
@@ -223,8 +229,21 @@ app.post('/newchatroom', (req,res) => {
         users:usersChecked,
         usersconnected:[]
     }
+    fs.readFile(__dirname+'/public/chatrooms.json', 'utf8', function(err,data){
+        if(err){console.log(err);return}
+        var allchatrooms = JSON.parse(data)
+        allchatrooms.chatrooms.push(myObj)
+        io.to('LoggedIn').emit('newchatroom',allchatrooms.chatrooms)
+        fs.writeFile(__dirname+'/public/chatrooms.json',JSON.stringify(allchatrooms),function(err){
+            if(err)console.log(err)
+            else console.log('successfully created chatroom')
+            res.json({success:true})
+        })
+    })
+    newChatrooms.push(myObj)
+    console.log(newChatrooms)
     chatRooms.push(myObj)
-    io.to('LoggedIn').emit('newchatroom',chatRooms)
+    
 })
 
 app.post('/checkroomnames', (req,res) => {
@@ -247,8 +266,14 @@ function checksessionuser(data) {
 }
 
 app.get('/allchatrooms', (req,res) => {
-    res.json(chatRooms)
+    fs.readFile(__dirname+'/public/chatrooms.json','utf8',function(err,data){
+        if(err){console.log(err);return}
+        var parsedData = JSON.parse(data)
+        res.json(parsedData.chatrooms)
+    })
 }) 
+
+
 
 app.get('/showcreateprofilepage', (req,res) => {
     res.sendFile(__dirname + '/public/createprofile.html')

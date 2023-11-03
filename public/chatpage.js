@@ -279,13 +279,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function activateIO() {
-            socket.emit('userlogin')
-            fetch('/allchatrooms')
-            .then(res => res.json())
-            .then(data => {
-                loadtabs(data)
-            })
-            myUsername = await getMyUsername()
+        socket.emit('userlogin')
+        myUsername = await getMyUsername()
     }
 
     async function checkUserChatrooms() {
@@ -316,7 +311,15 @@ document.addEventListener('DOMContentLoaded', () => {
             loadChatmessage(data.messages[i])
         }
         })
-        
+    }
+
+    async function loadAllChatrooms() {
+        fetch('/allchatrooms')
+        .then(res=>res.json())
+        .then(data => {
+            loadtabs(data)
+            setTimeout(loadAllMessages, 100)
+        })
     }
 
     socket.on('userleave', (data) => {
@@ -347,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     activateIO()
     loadMyUserInterface()
-    loadAllMessages()
+    loadAllChatrooms()
     logoutbutton.addEventListener('click', () => {
         fetch('/destroysession')
         sessionobj.checkses()
