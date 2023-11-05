@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const formdiv = document.getElementById('formDiv')
+    const userTime = document.getElementById('ahgf')
     const userInterfaceDiv = document.getElementById('userInterface')
     var prevTime = [0,0]
     var selectedRoom = 'global'
@@ -108,8 +108,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         if (uislooped == true) {
-            var newuserinterface = Object.assign(document.createElement('div'),{className:'allui',id:'uidivs'+allchatrooms[arr1[arr1.length-1]].id,style: { display:'none'}})
-            document.getElementById('userInterfacecontainer').appendChild(newuserinterface)
+            //var newuserinterface = Object.assign(document.createElement('div'),{className:'allui',id:'uidivs'+allchatrooms[arr1[arr1.length-1]].id,style: { display:'none'}})
+            //document.getElementById('userInterfacecontainer').appendChild(newuserinterface)
         }
         
         for (let i = 0; i < arr1.length;i++) {
@@ -343,6 +343,12 @@ document.addEventListener('DOMContentLoaded', () => {
     activateIO()
     loadMyUserInterface()
     loadAllChatrooms()
+
+    setInterval(() => {
+        var time = getTime()
+        userTime.textContent=(time[0]+':'+time[1]+':'+time[2])
+    }, 1000);
+
     logoutbutton.addEventListener('click', () => {
         fetch('/destroysession')
         sessionobj.checkses()
