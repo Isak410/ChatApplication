@@ -299,6 +299,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fetch('/getMessages')
         .then(res => res.json())
         .then(data => {
+        console.log(data)
+        console.log(data.messages)
         for (let i = 0; i < data.messages.length; i++) {
             loadChatmessage(data.messages[i])
         }
@@ -306,12 +308,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function loadAllChatrooms() {
-        fetch('/allchatrooms')
-        .then(res=>res.json())
-        .then(data => {
-            loadtabs(data)
-            setTimeout(loadAllMessages, 100)
-        })
+        try {
+            const response = await fetch('/allchatrooms');
+            const data = await response.json();
+            loadtabs(data.chatrooms);
+            setTimeout(loadAllMessages, 200);
+        } catch (error) {
+            console.error('Error fetching chatrooms:', error);
+        }
     }
 
     socket.on('userleave', (data) => {
