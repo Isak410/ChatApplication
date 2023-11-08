@@ -14,13 +14,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     form.addEventListener('submit', function (e) {
         sessionobj.checkses()
-        e.preventDefault(); // Prevent the default form submission behavior
+        e.preventDefault()
         if (input.value == "") {return}
         let tid = getTime()  
         let currentTime = (""+tid[0]+":"+tid[1]+":"+tid[2])
         var msgval = input.value
-    
-        //socket.emit('chat message', {timeOfSend:currentTime, message: msgval});
         fetch('/sendmessage', {
             method: 'POST',
             headers: {
@@ -203,11 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
     }
 
-    function resetTabMenu(arr) {
+    function resetTabMenu() {
         document.getElementById('createnewtabmenu').style.display = "none"
-        for (let i = 0; i < arr.length; i++) {
-    
-        }
     }
 
     async function getMyUsername() {
